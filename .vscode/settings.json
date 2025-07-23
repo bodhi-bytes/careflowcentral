@@ -1,0 +1,10 @@
+{
+    "mdb.presetConnections": [
+        {
+            "name": "Local Database",
+            "connectionString": "mongodb://localhost:27017"
+        }
+    ],
+    "IDX.aI.enableInlineCompletion": true,
+    "IDX.aI.enableCodebaseIndexing": true
+}
