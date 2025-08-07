@@ -8,10 +8,15 @@ const {
   deleteCaregiverProfile,
 } = require('../controllers/caregiverController');
 
-router.post('/', createCaregiverProfile);
-router.get('/', getAllCaregiverProfiles);
-router.get('/:id', getCaregiverProfileById);
-router.put('/:id', updateCaregiverProfile);
-router.delete('/:id', deleteCaregiverProfile);
+const { protect, authorize } = require('../middleware/authMiddleware'); // Import middleware
+
+router.route('/')
+    .post(protect, authorize('admin'), createCaregiverProfile) // Only admin can create
+    .get(protect, authorize('admin', 'caregiver', 'client'), getAllCaregiverProfiles); // All authenticated can view all
+
+router.route('/:id')
+    .get(protect, authorize('admin', 'caregiver', 'client'), getCaregiverProfileById) // All authenticated can view by ID
+    .put(protect, authorize('admin', 'caregiver'), updateCaregiverProfile) // Admin and caregiver themselves
+    .delete(protect, authorize('admin'), deleteCaregiverProfile); // Only admin can delete
 
 module.exports = router;

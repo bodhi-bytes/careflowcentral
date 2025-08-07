@@ -26,6 +26,15 @@ app.use('/api/auth', require('./routes/authRoutes'));
 // Add caregiver routes
 app.use('/api/caregivers', require('./routes/caregiverRoutes'));
 
+// Add patient routes
+app.use('/api/patients', require('./routes/patientRoutes'));
+
+// Add appointment routes
+app.use('/api/appointments', require('./routes/appointmentRoutes'));
+
+// Add care plan routes
+app.use('/api/careplans', require('./routes/carePlanRoutes'));
+
 app.use('/', (_req, res) => res.status(200).send('API v1.0 is running...'));
 
 // Start the server
