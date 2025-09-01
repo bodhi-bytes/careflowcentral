@@ -18,5 +18,6 @@ router.route('/:id')
     .get(protect, authorize('admin', 'staff', 'client'), getStaffProfileById) // All authenticated can view by ID
     .put(protect, authorize('admin', 'staff'), updateStaffProfile) // Admin and staff themselves
     .delete(protect, authorize('admin'), deleteStaffProfile); // Only admin can delete
+    
 
 module.exports = router;
