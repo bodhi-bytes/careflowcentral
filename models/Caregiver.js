@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
+const caregiverSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
@@ -15,11 +15,10 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['client', 'caregiver', 'admin', 'other'], // Added 'other'
-    required: true
+    default: 'caregiver'
   },
   profile: {
-    type: mongoose.Schema.Types.Mixed, // Allows for flexible profile structure based on role
+    type: mongoose.Schema.Types.Mixed,
     required: false
   },
   status: {
@@ -30,11 +29,11 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 // Password hashing middleware
-userSchema.pre('save', async function(next) {
+caregiverSchema.pre('save', async function(next) {
   if (this.isModified('passwordHash')) {
     this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
   }
   next();
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('Caregiver', caregiverSchema);

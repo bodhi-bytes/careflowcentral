@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const Caregiver = require('../models/Caregiver');
+const StaffProfile = require('../models/StaffProfile'); // Keep this import if StaffProfile is used elsewhere in authController
 const bcrypt = require('bcryptjs');
 const { generateToken } = require('../middleware/authMiddleware'); // Import generateToken
 
@@ -28,7 +30,7 @@ exports.register = async (req, res) => {
     await newUser.save();
 
     // Generate token for immediate login after registration
-    const token = generateToken(newUser._id);
+    const token = generateToken(newUser);
 
     // Return user without password hash and with token
     const userToReturn = newUser.toObject();
@@ -40,6 +42,7 @@ exports.register = async (req, res) => {
       token
     });
   } catch (error) {
+    console.error("Login error:", error);  // Add this line
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -49,7 +52,13 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ email });
+    let user = await User.findOne({ email });
+
+    // If user not found, check if it's a caregiver
+    if (!user) {
+      user = await Caregiver.findOne({ email });
+    }
+
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -61,7 +70,7 @@ exports.login = async (req, res) => {
     }
 
     // Generate token
-    const token = generateToken(user._id);
+    const token = generateToken(user);
 
     // Return user without password hash and with token
     const userToReturn = user.toObject();

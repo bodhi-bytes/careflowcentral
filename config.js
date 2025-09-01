@@ -1,5 +1,5 @@
 module.exports = {
     serverConfiguration: {
-        port: 3001, // Changed port to 3001
+        port: process.env.PORT || 3001, // Use port from .env or default to 3001
     }
 };

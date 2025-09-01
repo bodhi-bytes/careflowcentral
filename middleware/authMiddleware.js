@@ -2,9 +2,15 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 // Utility function to generate a JWT
-const generateToken = (id) => {
+const generateToken = (user) => {
     // Ensure JWT_SECRET is set in your .env file
-    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Token expires in 1 hour
+    const payload = {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        username: user.profile?.personalInfo?.firstName || user.email
+    };
+    return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' }); // Token expires in 8 hours
 };
 
 // Middleware to protect routes (ensure user is logged in)

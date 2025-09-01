@@ -1,4 +1,4 @@
-// models/CaregiverProfile.js
+// models/StaffProfile.js
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -19,6 +19,13 @@ const DemographicsSchema = new Schema({
   gender: { type: String, enum: ['Male', 'Female', 'Non-binary', 'Prefer not to say'] },
   preferredLanguage: { type: String, default: 'English' },
   otherLanguage: String
+});
+
+const AddressSchema = new Schema({
+  street: String,
+  city: String,
+  state: String,
+  zip: String
 });
 
 const QualificationsSchema = new Schema({
@@ -61,11 +68,12 @@ const PolicyAcknowledgmentsSchema = new Schema({
   electronicCommunications: Boolean
 });
 
-const CaregiverProfileSchema = new Schema({
+const StaffProfileSchema = new Schema({
   personalInformation: {
     fullName: { type: NameSchema, required: true },
     contactDetails: { type: ContactDetailsSchema, required: true },
-    demographics: { type: DemographicsSchema, required: true }
+    demographics: { type: DemographicsSchema, required: true },
+    address: { type: AddressSchema, required: true } // Added address
   },
   professionalDetails: {
     positionAppliedFor: { type: String, required: true },
@@ -85,11 +93,11 @@ const CaregiverProfileSchema = new Schema({
   agreements: {
     policyAcknowledgments: { type: PolicyAcknowledgmentsSchema },
     digitalSignature: String,
-    signatureDate: Date
+    signatureDate: { type: Date, default: Date.now } // Added default
   },
   submissionTimestamp: { type: Date, default: Date.now },
-  status: { 
-    type: String, 
+  status: {
+    type: String,
     enum: ['Pending Review', 'Approved', 'Rejected', 'On Hold'],
     default: 'Pending Review'
   },
@@ -102,10 +110,10 @@ const CaregiverProfileSchema = new Schema({
 }, { timestamps: true });
 
 // Add text index for search functionality
-CaregiverProfileSchema.index({
+StaffProfileSchema.index({
   'personalInformation.fullName.firstName': 'text',
   'personalInformation.fullName.lastName': 'text',
   'personalInformation.contactDetails.emailAddress': 'text'
 });
 
-module.exports = mongoose.model('CaregiverProfile', CaregiverProfileSchema);
+module.exports = mongoose.model('StaffProfile', StaffProfileSchema);

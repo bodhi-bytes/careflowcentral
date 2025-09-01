@@ -1,64 +1,42 @@
-const CaregiverProfile = require('../models/CaregiverProfile');
+const Caregiver = require('../models/Caregiver');
 
-// Create a new caregiver profile
-exports.createCaregiverProfile = async (req, res) => {
-  try {
-    const newProfile = await CaregiverProfile.create(req.body);
-    res.status(201).json(newProfile);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-// Get all caregiver profiles
-exports.getAllCaregiverProfiles = async (_req, res) => {
-  try {
-    const profiles = await CaregiverProfile.find();
-    res.status(200).json(profiles);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// Get a single caregiver profile by ID
-exports.getCaregiverProfileById = async (req, res) => {
-  try {
-    const profile = await CaregiverProfile.findById(req.params.id);
-    if (!profile) {
-      return res.status(404).json({ message: 'Caregiver profile not found' });
+// @desc    Get all caregivers
+// @route   GET /api/caregivers
+// @access  Private (e.g., only authenticated admins)
+exports.getAllCaregivers = async (req, res) => {
+    try {
+        const caregivers = await Caregiver.find({}, 'profile.firstName profile.lastName');
+        res.status(200).json({
+            success: true,
+            count: caregivers.length,
+            data: caregivers
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server Error while fetching caregivers' 
+        });
     }
-    res.status(200).json(profile);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
 };
 
-// Update a caregiver profile by ID
-exports.updateCaregiverProfile = async (req, res) => {
+// Get the current caregiver's profile
+exports.getMe = async (req, res) => {
   try {
-    const updatedProfile = await CaregiverProfile.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!updatedProfile) {
-      return res.status(404).json({ message: 'Caregiver profile not found' });
+    // Use .lean() to get a plain JavaScript object
+    const caregiver = await Caregiver.findById(req.user.id).select('-passwordHash').lean();
+    if (!caregiver) {
+      return res.status(404).json({ message: 'Caregiver not found' });
     }
-    res.status(200).json(updatedProfile);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
+    
+    // Remap profile to personalInfo for frontend compatibility
+    const { profile, ...caregiverData } = caregiver;
+    const response = {
+      ...caregiverData,
+      personalInfo: profile || {} // Ensure personalInfo is at least an empty object
+    };
 
-// Delete a caregiver profile by ID
-exports.deleteCaregiverProfile = async (req, res) => {
-  try {
-    const deletedProfile = await CaregiverProfile.findByIdAndDelete(req.params.id);
-    if (!deletedProfile) {
-      return res.status(404).json({ message: 'Caregiver profile not found' });
-    }
-    res.status(200).json({ message: 'Caregiver profile deleted successfully' });
+    res.status(200).json(response);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
