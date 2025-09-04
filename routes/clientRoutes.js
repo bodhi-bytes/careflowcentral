@@ -26,3 +26,4 @@ router.route('/:id')
     .delete(protect, authorize('admin'), deleteClientProfile); // Only admin can delete
 
 module.exports = router;
+ 

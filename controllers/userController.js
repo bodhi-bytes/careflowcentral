@@ -1,5 +1,5 @@
 const User = require('../models/User');
-
+const mongoose = require('mongoose');
 // Create a new user (This will be primarily handled by authController.register for new users)
 // This function might be used for admin to create users directly without full auth flow
 exports.createUser = async (req, res) => {
@@ -27,7 +27,13 @@ exports.getAllUsers = async (_req, res) => {
 // Get a user by ID
 exports.getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-passwordHash');
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid user id' });
+    }
+
+    const user = await User.findById(id).select('-passwordHash');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -77,7 +83,13 @@ exports.updateUser = async (req, res) => {
 // Delete a user by ID
 exports.deleteUser = async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid user id' });
+    }
+
+    const deletedUser = await User.findByIdAndDelete(id);
     if (!deletedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
