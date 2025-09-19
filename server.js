@@ -41,6 +41,8 @@ app.use('/api/careplans', require('./routes/carePlanRoutes'));
 // Add caregiver routes
 app.use('/api/caregivers', require('./routes/caregiverRoutes'));
 
+
+
 // Root route for health check
 app.get('/', (_req, res) => res.status(200).json({ message: 'API v1.0 is running...' }));
 

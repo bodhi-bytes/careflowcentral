@@ -1,12 +1,73 @@
 const Appointment = require('../models/Appointment');
+const StaffProfile = require('../models/StaffProfile');
+
+const { format } = require('date-fns');
 
 // @desc    Create a new appointment
 // @route   POST /api/appointments
 // @access  Private (e.g., authenticated users, caregivers can schedule for patients)
 exports.createAppointment = async (req, res) => {
+    const { caregiver, patient, date, shift, startTime, endTime } = req.body;
+
+    // Validate date
+    if (!date || isNaN(new Date(date).getTime())) {
+        return res.status(400).json({ success: false, message: 'Invalid or missing date provided.' });
+    }
+    const requestDate = new Date(date);
+
     try {
-        const appointment = await Appointment.create(req.body);
+        // Prevent double entry by checking for an identical appointment
+        const existingAppointment = await Appointment.findOne({
+            caregiver,
+            patient,
+            date: requestDate,
+            startTime,
+            endTime,
+        });
+
+        if (existingAppointment) {
+            return res.status(409).json({ success: false, message: 'This exact appointment has already been booked.' });
+        }
+
+        // Step 1: Validate caregiver's general availability
+        const staffProfile = await StaffProfile.findById(caregiver);
+
+        if (!staffProfile) {
+            return res.status(400).json({ success: false, message: 'Caregiver profile not found.' });
+        }
+
+        const dayOfWeek = format(requestDate, 'EEEE');
+
+        const hasShiftPreference = staffProfile.professionalDetails.workAvailability.shiftPreference
+            .map(s => s.toLowerCase())
+            .includes(shift.toLowerCase());
+        const hasDayAvailability = staffProfile.professionalDetails.workAvailability.daysAvailable
+            .map(d => d.toLowerCase())
+            .includes(dayOfWeek.toLowerCase());
+
+        // if (!hasShiftPreference || !hasDayAvailability) {
+        //     return res.status(400).json({ success: false, message: 'Caregiver is not available for this day or shift.' });
+        // }
+
+        // Step 2: Check for conflicting appointments for both caregiver and patient
+        const conflictingAppointment = await Appointment.findOne({
+            date: requestDate,
+            status: { $in: ['Scheduled', 'Pending'] },
+            startTime: { $lt: endTime },
+            endTime: { $gt: startTime },
+            $or: [{ caregiver }, { patient }],
+        });
+
+        if (conflictingAppointment) {
+            // Identify which party has the conflict
+            const conflictingParty = conflictingAppointment.caregiver.toString() === caregiver ? 'Caregiver' : 'Patient';
+            return res.status(400).json({ success: false, message: `${conflictingParty} has a conflicting appointment at this time.` });
+        }
+
+        // Step 3: Create the appointment
+        const appointment = await Appointment.create({ ...req.body, date: requestDate });
         res.status(201).json({ success: true, data: appointment });
+
     } catch (error) {
         console.error(error);
         if (error.name === 'ValidationError') {
@@ -36,7 +97,7 @@ exports.getAllAppointments = async (req, res) => {
 
         const appointments = await Appointment.find(query)
             .populate('patient', 'personalInfo.firstName personalInfo.lastName') // Populate patient name
-            .populate('caregiver', 'name email'); // Populate caregiver name/email
+            .populate('caregiver', 'personalInformation.fullName personalInformation.contactDetails.emailAddress'); // Populate caregiver name/email
 
         res.status(200).json({ success: true, count: appointments.length, data: appointments });
     } catch (error) {
@@ -52,7 +113,7 @@ exports.getAppointmentById = async (req, res) => {
     try {
         const appointment = await Appointment.findById(req.params.id)
             .populate('patient', 'personalInfo.firstName personalInfo.lastName')
-            .populate('caregiver', 'name email');
+            .populate('caregiver', 'personalInformation.fullName personalInformation.contactDetails.emailAddress');
 
         if (!appointment) {
             return res.status(404).json({ success: false, message: 'Appointment not found' });

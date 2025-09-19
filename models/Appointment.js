@@ -8,7 +8,7 @@ const appointmentSchema = new mongoose.Schema({
     },
     caregiver: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'CaregiverProfile',
+        ref: 'StaffProfile', // Updated to reference StaffProfile
         required: true,
     },
     date: {
