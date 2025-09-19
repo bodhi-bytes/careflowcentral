@@ -16,7 +16,6 @@ const generateToken = (user) => {
 // Middleware to protect routes (ensure user is logged in)
 const protect = async (req, res, next) => {
     let token;
-
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
             // Get token from header
