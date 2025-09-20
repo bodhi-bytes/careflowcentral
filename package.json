@@ -17,8 +17,10 @@
     "nodemailer": "^6.9.16",
     "web-push": "^3.6.7"
   },
-  "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  }
+"scripts": {
+  "dev": "nodemon server.js",
+  "start": "node server.js",
+  "build": "react-scripts build"
+}
+
 }
