@@ -16,6 +16,13 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
+const webpush = require('web-push');
+
+const publicVapidKey = process.env.VAPID_PUBLIC_KEY;
+const privateVapidKey = process.env.VAPID_PRIVATE_KEY;
+
+webpush.setVapidDetails('mailto:your-email@example.com', publicVapidKey, privateVapidKey);
+
 // Define routes for the 'users' collection (consider deprecating/refactoring this old route)
 const userRoutes = require('./user.routes');
 app.use('/users', userRoutes);
@@ -40,6 +47,7 @@ app.use('/api/careplans', require('./routes/carePlanRoutes'));
 
 // Add caregiver routes
 app.use('/api/caregivers', require('./routes/caregiverRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 
 

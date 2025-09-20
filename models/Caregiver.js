@@ -25,6 +25,9 @@ const caregiverSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'inactive', 'pending'],
     default: 'pending'
+  },
+  subscription: {
+    type: Object
   }
 }, { timestamps: true });
 

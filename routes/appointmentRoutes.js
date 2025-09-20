@@ -21,6 +21,9 @@ router.route('/')
     .post(protect, authorize('caregiver', 'admin', 'client'), createAppointment) // Caregivers, admins, or clients can create
     .get(protect, authorize('caregiver', 'admin', 'client'), getAllAppointments); // Caregivers, admins, or clients can view
 
+router.route('/visit-bookings') // New route for visit bookings
+    .post(protect, authorize('caregiver', 'admin', 'client'), createAppointment);
+
 router.route('/:id')
     .get(protect, authorize('caregiver', 'admin', 'client'), getAppointmentById) // Caregivers, admins, or clients involved in appointment
     .put(protect, authorize('caregiver', 'admin', 'client'), updateAppointment) // Caregivers, admins, or clients involved in appointment

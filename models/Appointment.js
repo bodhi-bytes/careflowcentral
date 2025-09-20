@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const AppointmentSchema = new mongoose.Schema({
   client: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
-  caregiver: { type: mongoose.Schema.Types.ObjectId, ref: 'Caregiver', required: true },
+  caregiver: { type: mongoose.Schema.Types.ObjectId, ref: 'StaffProfile', required: true },
   start: { type: Date, required: true },
   end: { type: Date, required: true },
   durationHours: { type: Number, default: 1 },
