@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
 const AppointmentSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  type: { type: String, enum: ['Appointment', 'Care Rotation', 'Visit', 'Other'], default: 'Appointment' },
   client: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
   caregiver: { type: mongoose.Schema.Types.ObjectId, ref: 'Caregiver', required: true },
   start: { type: Date, required: true },

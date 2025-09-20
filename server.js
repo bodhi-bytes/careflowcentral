@@ -3,6 +3,9 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 
+
+const clientRoutes = require("../careflowcentral/routes/Client/clientRoute");
+
 const connectDB = require('./config/db');
 const { serverConfiguration } = require('./config');
 
@@ -40,6 +43,13 @@ app.use('/api/careplans', require('./routes/carePlanRoutes'));
 
 // Add caregiver routes
 app.use('/api/caregivers', require('./routes/caregiverRoutes'));
+
+
+//--------------------
+//Client Side
+
+app.use('/client',clientRoutes)
+
 
 
 

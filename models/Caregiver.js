@@ -25,7 +25,13 @@ const caregiverSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'inactive', 'pending'],
     default: 'pending'
+  },
+  clientId:{
+     type: mongoose.Schema.Types.Mixed,
+    required: false,
+    ref: "Client"
   }
+
 }, { timestamps: true });
 
 // Password hashing middleware
