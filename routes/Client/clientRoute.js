@@ -1,7 +1,7 @@
 const express = require('express');
 const { createAppointment } = require('../../controllers/Client/appointment');
 const { createMedication } = require('../../controllers/Client/medication');
-const { protect, authorize } = require('../middleware/authMiddleware');
+const { protect, authorize } = require('../../authMiddlewaremiddleware/authMiddleware');
 
 const router = express.Router();
 
