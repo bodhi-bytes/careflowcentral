@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 
-const clientRoutes = require("../careflowcentral/routes/Client/clientRoute");
+const clientRoutes = require("./routes/Client/clientRoute");
 
 const connectDB = require('./config/db');
 const { serverConfiguration } = require('./config');
