@@ -61,6 +61,7 @@ app.use((req, res, next) => {
     res.status(404).json({ success: false, message: `API Endpoint not found: ${req.method} ${req.originalUrl}` });
 });
 
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
