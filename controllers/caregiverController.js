@@ -3,6 +3,7 @@ const { format } = require('date-fns');
 const StaffProfile = require('../models/StaffProfile');
 const Appointment = require('../models/Appointment');
 const Caregiver = require('../models/Caregiver');
+const { default: mongoose } = require('mongoose');
 
 // @desc    Get available caregivers by shift
 // @route   GET /api/caregivers/available
@@ -98,21 +99,39 @@ exports.getAllCaregivers = async (req, res) => {
 // Get the current caregiver's profile
 exports.getMe = async (req, res) => {
   try {
-    // Use .lean() to get a plain JavaScript object
-    const caregiver = await Caregiver.findById(req.user.id).select('-passwordHash').lean();
-    if (!caregiver) {
-      return res.status(404).json({ message: 'Caregiver not found' });
-    }
-    
-    // Remap profile to personalInfo for frontend compatibility
-    const { profile, ...caregiverData } = caregiver;
-    const response = {
-      ...caregiverData,
-      personalInfo: profile || {} // Ensure personalInfo is at least an empty object
-    };
+    const { id } = req.params;
 
-    res.status(200).json(response);
+    // ✅ Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid caregiver ID'
+      });
+    }
+
+    // ✅ Find caregiver and optionally populate client details
+    const caregiver = await Caregiver.findById(id)
+      .populate('clientId') // populate if Client model exists
+      .select('-passwordHash'); // hide passwordHash for security
+
+    if (!caregiver) {
+      return res.status(404).json({
+        success: false,
+        message: 'Caregiver not found'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: caregiver
+    });
+
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error fetching caregiver by ID:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
   }
 };
