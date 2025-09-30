@@ -1,4 +1,8 @@
 const express = require('express');
+const { protect, authorize } = require('../middleware/authMiddleware'); // Import middleware
+const { getAllClients, getAllCaregivers } = require('../controllers/adminAppointementController');
+const assignAppointment  =require("../controllers/appoinment/assignAppoinment")
+const router = express.Router();
 const {
     createAppointment,
     getAllAppointments,
@@ -7,10 +11,7 @@ const {
     deleteAppointment,
 } = require('../controllers/appointmentController');
 
-const { protect, authorize } = require('../middleware/authMiddleware'); // Import middleware
-const { getAllClients, getAllCaregivers } = require('../controllers/adminAppointementController');
 
-const router = express.Router();
 
 //create appoinment by admin
 router.get('/clients', protect, authorize('admin'), getAllClients);
@@ -26,6 +27,8 @@ router.route('/:id')
     .put(protect, authorize('caregiver', 'admin', 'client'), updateAppointment) // Caregivers, admins, or clients involved in appointment
     .delete(protect, authorize('admin'), deleteAppointment); // Only admins can delete
 
+//assign appoinment
+router.post('/assign',assignAppointment)
 
 
 module.exports = router;

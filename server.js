@@ -1,68 +1,90 @@
-require('dotenv').config();
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const http = require("http");
+const { Server } = require("socket.io");
 
-
-const clientRoutes = require("./routes/Client/clientRoute");
-
-const connectDB = require('./config/db');
-const { serverConfiguration } = require('./config');
-
+const connectDB = require("./config/db");
+const { serverConfiguration } = require("./config");
 const { port } = serverConfiguration;
 
-// Connect to MongoDB
-connectDB();
-
 const app = express();
-// Set up a middleware to parse JSON data in the request body
-app.use(bodyParser.json());
-app.use(cors());
 
-// Define routes for the 'users' collection (consider deprecating/refactoring this old route)
-const userRoutes = require('./user.routes');
-app.use('/users', userRoutes);
+// Middleware
+app.use(express.json());
+app.use(cors({
+  origin: ["http://localhost:3000"], // ✅ add your frontend domain here
+  methods: ["GET", "POST", "PUT", "DELETE"]
+}));
 
-// Add authentication routes
-app.use('/api/auth', require('./routes/authRoutes'));
-
-// Add staff onboarding routes
-app.use('/api/staff-onboarding', require('./routes/staffOnboardingRoutes'));
-
-// Add caregiver routes
-app.use('/api/staff', require('./routes/staffRoutes'));
-
-// Add client routes
-app.use('/api/clients', require('./routes/clientRoutes'));
-
-// Add appointment routes
-app.use('/api/appointments', require('./routes/appointmentRoutes'));
-
-// Add care plan routes
-app.use('/api/careplans', require('./routes/carePlanRoutes'));
-
-// Add caregiver routes
-app.use('/api/caregivers', require('./routes/caregiverRoutes'));
-
-
-//--------------------
-//Client Side
-
-app.use('/api/client',clientRoutes)
-
-
-
+// Routes
+app.use("/users", require("./user.routes")); // legacy
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/staff-onboarding", require("./routes/staffOnboardingRoutes"));
+app.use("/api/staff", require("./routes/staffRoutes"));
+app.use("/api/clients", require("./routes/clientRoutes"));
+app.use("/api/appointments", require("./routes/appointmentRoutes"));
+app.use("/api/careplans", require("./routes/carePlanRoutes"));
+app.use("/api/caregivers", require("./routes/caregiverRoutes"));
+app.use("/api/client", require("./routes/Client/clientRoute")); // separate client side
 
 // Root route for health check
-app.get('/', (_req, res) => res.status(200).json({ message: 'API v1.0 is running...' }));
+app.get("/", (_req, res) =>
+  res.status(200).json({ message: "API v1.0 is running..." })
+);
 
-// Catch-all for 404 Not Found - this should be the last middleware
-app.use((req, res, next) => {
-    res.status(404).json({ success: false, message: `API Endpoint not found: ${req.method} ${req.originalUrl}` });
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `API Endpoint not found: ${req.method} ${req.originalUrl}`,
+  });
 });
 
-
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
+// HTTP + Socket.io setup
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:3000"], // ✅ change to your frontend domain
+    methods: ["GET", "POST"],
+  },
 });
+
+const connectedUsers = new Map();
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  // Register caregiver/user
+  socket.on("register", (userId) => {
+    connectedUsers.set(userId, socket.id);
+    console.log(`User ${userId} registered with socket ${socket.id}`);
+  });
+
+  socket.on("disconnect", () => {
+    for (const [userId, sockId] of connectedUsers.entries()) {
+      if (sockId === socket.id) {
+        connectedUsers.delete(userId);
+        console.log(`User ${userId} disconnected`);
+        break;
+      }
+    }
+    console.log("Socket disconnected:", socket.id);
+  });
+});
+
+// Make io & connectedUsers accessible in controllers
+app.set("io", io);
+app.set("connectedUsers", connectedUsers);
+
+// Connect DB then start server
+connectDB()
+  .then(() => {
+    server.listen(port, () => {
+      console.log(`✅ Server running at http://localhost:${port}/`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection failed:", err);
+    process.exit(1);
+  });
