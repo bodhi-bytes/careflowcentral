@@ -1,73 +1,83 @@
 // controllers/appointmentsController.js
 const Appointment = require('../../models/Appointment');
 
+function calculateDurationHours(start, end) {
+  return (end - start) / (1000 * 60 * 60);
+}
+
+
 exports.createAppointment = async (req, res) => {
   try {
-    const { title, type, date, time, client, caregiver, notes } = req.body;
-    
-    // Validate required fields
-    if (!title || !date || !time || !client || !caregiver) {
-      return res.status(400).json({
+    const { title, type, date, time, notes, client } = req.body;
+    // const client = req.userId; // client must be authenticated
+
+    // Require authentication
+    if (!client) {
+      return res.status(401).json({
         success: false,
-        message: 'Title, date, time, client, and caregiver are required'
+        message: 'Authentication required. Attach valid auth token.'
       });
     }
-    
-    // Parse date and time into start datetime object
+
+    // Validate required fields
+    if (!title || !date || !time) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title, date and time are required'
+      });
+    }
+
+    // Parse start datetime & validate
     const startDateTime = new Date(`${date}T${time}`);
-    
-    // Calculate end time (default to 1 hour duration if not specified)
-    const endDateTime = new Date(startDateTime.getTime() + (60 * 60 * 1000));
-    
-    // Check for scheduling conflicts
+    if (Number.isNaN(startDateTime.getTime())) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid date or time. Use YYYY-MM-DD and HH:mm (24-hour) formats.'
+      });
+    }
+
+    // Default duration 1 hour
+    const endDateTime = new Date(startDateTime.getTime() + 60 * 60 * 1000);
+
+    // Check client-side conflicts only (caregiver will be assigned later)
     const conflictingAppointment = await Appointment.findOne({
-      $or: [
-        { 
-          caregiver, 
-          start: { $lt: endDateTime }, 
-          end: { $gt: startDateTime }, 
-          status: { $ne: 'cancelled' } 
-        },
-        { 
-          client, 
-          start: { $lt: endDateTime }, 
-          end: { $gt: startDateTime }, 
-          status: { $ne: 'cancelled' } 
-        }
-      ]
+      client,
+      start: { $lt: endDateTime },
+      end: { $gt: startDateTime },
+      status: { $ne: 'cancelled' }
     });
-    
+
     if (conflictingAppointment) {
       return res.status(409).json({
         success: false,
-        message: 'Scheduling conflict: The caregiver or client already has an appointment during this time',
+        message: 'Scheduling conflict: You already have an appointment during this time',
         conflict: conflictingAppointment
       });
     }
-    
+
+    // Create appointment with caregiver left null (admin will assign later)
     const newAppointment = new Appointment({
       title,
       type: type || 'Appointment',
       client,
-      caregiver,
+      caregiver: null, // to be set by admin later
       start: startDateTime,
       end: endDateTime,
       durationHours: calculateDurationHours(startDateTime, endDateTime),
       notes: notes || '',
-      status: 'scheduled',
-      createdBy: req.userId
+      status: 'scheduled', // admin should approve/assign and change to 'scheduled'
+      createdBy: client
     });
-    
+
     await newAppointment.save();
-    
-    // Populate the references for the response
+
+    // populate references (caregiver may be null)
     await newAppointment.populate('client', 'name');
-    await newAppointment.populate('caregiver', 'name');
     await newAppointment.populate('createdBy', 'name');
-    
+
     res.status(201).json({
       success: true,
-      message: 'Appointment created successfully',
+      message: 'Appointment request created successfully. Waiting for caregiver assignment by admin.',
       data: newAppointment
     });
   } catch (error) {

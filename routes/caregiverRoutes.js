@@ -7,7 +7,7 @@ const caregiverController = require('../controllers/caregiverController');
 router.get('/', protect, authorize('admin'), caregiverController.getAllCaregivers);
 
 // GET the current caregiver's profile
-router.get('/me', protect, authorize('caregiver'), caregiverController.getMe);
+router.get('/me/:id',  caregiverController.getMe);
 
 // GET available caregivers by shift
 router.get('/available', caregiverController.getAvailableCaregivers);

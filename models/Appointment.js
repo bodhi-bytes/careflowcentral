@@ -4,7 +4,7 @@ const AppointmentSchema = new mongoose.Schema({
   title: { type: String, required: true },
   type: { type: String, enum: ['Appointment', 'Care Rotation', 'Visit', 'Other'], default: 'Appointment' },
   client: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
-  caregiver: { type: mongoose.Schema.Types.ObjectId, ref: 'Caregiver', required: true },
+  caregiver: { type: mongoose.Schema.Types.ObjectId, ref: 'Caregiver', },
   start: { type: Date, required: true },
   end: { type: Date, required: true },
   durationHours: { type: Number, default: 1 },
