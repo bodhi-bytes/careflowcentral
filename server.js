@@ -48,7 +48,7 @@ app.use('/api/caregivers', require('./routes/caregiverRoutes'));
 //--------------------
 //Client Side
 
-app.use('/client',clientRoutes)
+app.use('/api/client',clientRoutes)
 
 
 
