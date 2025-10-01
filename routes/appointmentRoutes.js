@@ -10,8 +10,7 @@ const {
     updateAppointment,
     deleteAppointment,
 } = require('../controllers/appointmentController');
-
-
+const getNotification =require('../controllers/appoinment/getNofications')
 
 //create appoinment by admin
 router.get('/clients', protect, authorize('admin'), getAllClients);
@@ -29,6 +28,6 @@ router.route('/:id')
 
 //assign appoinment
 router.post('/assign',assignAppointment)
-
+router.get('/notification',protect,authorize('caregiver', 'admin', 'client'),getNotification)
 
 module.exports = router;
