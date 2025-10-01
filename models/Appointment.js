@@ -8,7 +8,7 @@ const AppointmentSchema = new mongoose.Schema({
   start: { type: Date, required: true },
   end: { type: Date, required: true },
   durationHours: { type: Number, default: 1 },
-  status: { type: String, enum: ['scheduled','completed','cancelled'], default: 'scheduled' },
+  status: { type: String, enum: ['scheduled','completed','cancelled','assigned'], default: 'scheduled' },
   notes: { type: String, default: '' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
